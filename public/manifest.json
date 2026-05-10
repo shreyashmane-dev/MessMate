@@ -1,0 +1,21 @@
+{
+  "name": "MessMate - Smart Mess Finder",
+  "short_name": "MessMate",
+  "description": "Discover hygienic, affordable and student-friendly mess services with real reviews.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
