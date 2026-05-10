@@ -124,8 +124,8 @@ export default function Home() {
               {/* Main Image */}
               <div className="absolute top-0 right-0 w-[80%] h-[90%] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white z-10 transform hover:-translate-y-2 transition-transform duration-500">
                 <img 
-                  src="https://images.unsplash.com/photo-1626804475297-4160cb8bf5af?q=80&w=1000&auto=format&fit=crop" 
-                  alt="Authentic Kolhapuri Indian Thali" 
+                  src="/hero-image.png" 
+                  alt="Authentic Indian Thali" 
                   className="w-full h-full object-cover"
                 />
               </div>
