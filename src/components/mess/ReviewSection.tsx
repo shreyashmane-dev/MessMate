@@ -18,9 +18,17 @@ export function ReviewSection({ messId, messName }: { messId: string, messName: 
 
   const fetchReviews = async () => {
     try {
-      const q = query(collection(db, "reviews"), where("messId", "==", messId), orderBy("createdAt", "desc"));
+      const q = query(collection(db, "reviews"), where("messId", "==", messId));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Sort in JavaScript
+      data.sort((a: any, b: any) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        return dateB - dateA;
+      });
+
       setReviews(data);
     } catch (error) {
       console.error("Error fetching reviews:", error);

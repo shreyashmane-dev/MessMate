@@ -16,11 +16,18 @@ export default function OwnerRequestsPage() {
     try {
       const q = query(
         collection(db, "requests"), 
-        where("ownerId", "==", user.uid),
-        orderBy("createdAt", "desc")
+        where("ownerId", "==", user.uid)
       );
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Sort in JavaScript to avoid composite index requirement
+      data.sort((a: any, b: any) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        return dateB - dateA;
+      });
+
       setRequests(data);
     } catch (error) {
       console.error("Error fetching requests:", error);

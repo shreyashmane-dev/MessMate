@@ -28,11 +28,19 @@ export default function OwnerReviewsPage() {
         // Get reviews for these messes
         const reviewQuery = query(
           collection(db, "reviews"), 
-          where("messId", "in", messIds),
-          orderBy("createdAt", "desc")
+          where("messId", "in", messIds)
         );
         const reviewSnapshot = await getDocs(reviewQuery);
-        setReviews(reviewSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const data = reviewSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Sort in JavaScript
+        data.sort((a: any, b: any) => {
+          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return dateB - dateA;
+        });
+
+        setReviews(data);
       } catch (error) {
         console.error("Error fetching reviews:", error);
       } finally {
