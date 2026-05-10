@@ -24,7 +24,7 @@ export default function ExplorePage() {
       try {
         const q = query(collection(db, "messes"), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
         setMesses(data);
         
         // If we have data and it has coordinates, set map center to first item

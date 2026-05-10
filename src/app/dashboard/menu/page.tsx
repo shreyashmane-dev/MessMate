@@ -8,9 +8,16 @@ import { Loader2, Save, CheckCircle2, UtensilsCrossed } from "lucide-react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+interface Mess {
+  id: string;
+  name: string;
+  menu?: Record<string, { item: string, quantity: string }>;
+  [key: string]: any;
+}
+
 export default function OwnerMenuPage() {
   const { user } = useAuthStore();
-  const [messes, setMesses] = useState<any[]>([]);
+  const [messes, setMesses] = useState<Mess[]>([]);
   const [selectedMessId, setSelectedMessId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,7 +32,7 @@ export default function OwnerMenuPage() {
       try {
         const q = query(collection(db, "messes"), where("ownerId", "==", user.uid));
         const snapshot = await getDocs(q);
-        const fetchedMesses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const fetchedMesses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Mess));
         setMesses(fetchedMesses);
         
         if (fetchedMesses.length > 0) {

@@ -16,18 +16,30 @@ import Link from "next/link";
 const messSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   type: z.enum(["Veg", "Non-Veg", "Both"]),
-  gender: z.enum(["Boys", "Girls", "Mixed"]),
-  monthlyPrice: z.number().min(500, "Must be at least 500"),
-  dailyPrice: z.number().min(20, "Must be at least 20").optional(),
+  gender: z.enum(["Boys", "Girls", "Co-ed"]),
+  monthlyPrice: z.coerce.number().min(500, "Must be at least 500"),
+  dailyPrice: z.coerce.number().min(20, "Must be at least 20").optional(),
   contactNumber: z.string().min(10, "Valid phone number required"),
   whatsappNumber: z.string().optional(),
   address: z.string().min(10, "Detailed address is required"),
   description: z.string().min(20, "Add a good description for students").max(500),
-  totalSeats: z.number().min(1, "Total seats must be at least 1"),
-  availableSeats: z.number().min(0, "Available seats cannot be negative"),
+  totalSeats: z.coerce.number().min(1, "Total seats must be at least 1"),
+  availableSeats: z.coerce.number().min(0, "Available seats cannot be negative"),
 });
 
-type MessFormValues = z.infer<typeof messSchema>;
+interface MessFormValues {
+  name: string;
+  type: "Veg" | "Non-Veg" | "Both";
+  gender: "Boys" | "Girls" | "Co-ed";
+  monthlyPrice: number;
+  dailyPrice?: number;
+  contactNumber: string;
+  whatsappNumber?: string;
+  address: string;
+  description: string;
+  totalSeats: number;
+  availableSeats: number;
+}
 
 export default function AddNewMess() {
   const { user } = useAuthStore();
@@ -39,10 +51,10 @@ export default function AddNewMess() {
   const [error, setError] = useState("");
 
   const { register, handleSubmit, formState: { errors } } = useForm<MessFormValues>({
-    resolver: zodResolver(messSchema),
+    resolver: zodResolver(messSchema) as any,
     defaultValues: {
       type: "Both",
-      gender: "Mixed",
+      gender: "Co-ed",
     }
   });
 
@@ -146,7 +158,7 @@ export default function AddNewMess() {
               >
                 <option value="Boys">Boys Only</option>
                 <option value="Girls">Girls Only</option>
-                <option value="Mixed">Mixed</option>
+                <option value="Co-ed">Co-ed / Mixed</option>
               </select>
             </div>
 

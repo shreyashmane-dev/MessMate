@@ -32,7 +32,19 @@ const messSchema = z.object({
   availableSeats: z.coerce.number().min(0, "Available seats cannot be negative"),
 });
 
-type MessFormValues = z.infer<typeof messSchema>;
+interface MessFormValues {
+  name: string;
+  description: string;
+  address: string;
+  monthlyPrice: number;
+  dailyPrice?: number;
+  type: "Veg" | "Non-Veg" | "Both";
+  gender: "Boys" | "Girls" | "Co-ed";
+  contactNumber: string;
+  whatsappNumber: string;
+  totalSeats: number;
+  availableSeats: number;
+}
 
 export default function EditMessPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
@@ -46,7 +58,7 @@ export default function EditMessPage({ params }: { params: Promise<{ id: string 
   const [position, setPosition] = useState<[number, number]>([28.6139, 77.2090]);
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<MessFormValues>({
-    resolver: zodResolver(messSchema),
+    resolver: zodResolver(messSchema) as any,
   });
 
   useEffect(() => {
