@@ -1,93 +1,105 @@
-# 🍱 MessMate - Smart Mess Finder
+# <div align="center">🥘 MessMate</div>
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![Firebase](https://img.shields.io/badge/Firebase-Store-orange?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-blue?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![Cloudinary](https://img.shields.io/badge/Cloudinary-Images-blueviolet?style=for-the-badge&logo=cloudinary)](https://cloudinary.com/)
+<div align="center">
+  <img src="./messmate_readme_banner_1778412364055.png" alt="MessMate Banner" width="100%" style="border-radius: 24px; margin-bottom: 20px;" />
+</div>
 
-**MessMate** is a premium, high-performance platform designed to bridge the gap between mess owners and students. Whether you're looking for a hygienic meal near your college or you're an owner looking to manage your listings and requests, MessMate provides a seamless, real-time experience.
+<div align="center">
+  <h3>Connecting Students with Quality Meals through Technology</h3>
+  
+  [![Next.js](https://img.shields.io/badge/Next.js-15+-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+  [![Firebase](https://img.shields.io/badge/Firebase-Realtime-FFCA28?style=for-the-badge&logo=firebase)](https://firebase.google.com)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
+  [![Typescript](https://img.shields.io/badge/Typescript-Ready-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+</div>
+
+---
+
+## 🚀 Overview
+
+**MessMate** is a premium, glassmorphic web application designed to bridge the gap between mess owners and students. Whether you are a student looking for the perfect meal plan or an owner wanting to digitize your operations, MessMate provides a seamless, interactive, and high-performance experience.
 
 ---
 
 ## ✨ Key Features
 
-### 👨‍🎓 For Students
-- **Interactive Map Search**: Pin-point messes on a live map with real-time pricing and ratings.
-- **Live Seat Tracking**: See exactly how many seats are available in real-time before you visit.
-- **Favorites & Reviews**: Save your favorite spots and read honest feedback from other students.
-- **Join Requests**: Send instant queries or joining requests directly to mess owners.
-- **Daily Menus**: Check what's cooking today before you step out.
+<div align="center">
+  <img src="./messmate_features_illustration_1778412547714.png" alt="Features" width="80%" style="border-radius: 20px; margin: 20px 0;" />
+</div>
 
-### 👨‍🍳 For Owners
-- **Powerful Dashboard**: Track your listings, average ratings, and student reviews in one place.
-- **Mess Management**: Create, edit, and delete mess listings with ease.
-- **Request Manager**: View and manage student joining requests in a dedicated tab.
-- **Image Gallery**: Upload and manage high-quality photos of your mess using Cloudinary.
-- **Location Pinning**: Set your exact mess location on the map for easy discovery.
+### 🎯 For Students
+- **Interactive Map Discovery**: Find messes near you with a high-performance Leaflet-based map.
+- **Smart Filtering**: Filter by Food Type (Veg/Non-Veg), Gender (Boys/Girls/Co-ed), and Price Range.
+- **Join Requests**: Send instant queries and join requests to mess owners with one click.
+- **Real-time Availability**: See live seat availability and capacity before you visit.
+- **Verified Reviews**: Read and write reviews to build a trusted community.
 
----
-
-## 🚀 Tech Stack
-
-- **Frontend**: Next.js 15 (App Router), React, Tailwind CSS
-- **Backend**: Firebase Firestore (NoSQL Database)
-- **Auth**: Firebase Authentication (Email & Google Login)
-- **Storage**: Cloudinary (Optimized Image Delivery)
-- **Maps**: Leaflet & OpenStreetMap
-- **State Management**: Zustand
-- **Animations**: Framer Motion & Lucide Icons
+### 💼 For Mess Owners
+- **Dynamic Dashboard**: Manage your listings, photos, and contact info in a sleek interface.
+- **Weekly Menu Manager**: Publish your daily schedule and special items for students to see.
+- **Request Management**: Accept or reject student join requests in real-time.
+- **Analytics & Visibility**: Get your mess discovered by thousands of students in your city.
 
 ---
 
-## 🛠️ Getting Started
+## 🛠️ Tech Stack
 
-### Prerequisites
-- Node.js 18+
-- Firebase Project
-- Cloudinary Account
+- **Core**: Next.js 15+ (App Router, Turbopack)
+- **Styling**: Tailwind CSS + Framer Motion for smooth animations
+- **Database**: Firebase Firestore (Real-time synchronization)
+- **Authentication**: Firebase Auth (Google & Email Login)
+- **Storage**: Cloudinary (High-performance image optimization)
+- **Maps**: React-Leaflet for interactive geographic discovery
 
-### Installation
+---
 
-1. **Clone the repository**
+## 📦 Installation & Setup
+
+1. **Clone the repository**:
    ```bash
    git clone https://github.com/shreyashmane-dev/MessMate.git
    cd MessMate
    ```
 
-2. **Install dependencies**
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Set up Environment Variables**
-   Create a `.env.local` file with your credentials:
+3. **Configure Environment Variables**:
+   Create a `.env.local` file with the following keys:
    ```env
    NEXT_PUBLIC_FIREBASE_API_KEY=your_key
    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_id
-   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_bucket
-   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_id
-   NEXT_PUBLIC_FIREBASE_APP_ID=your_id
-
    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_name
    NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_preset
    ```
 
-4. **Run development server**
+4. **Run the development server**:
    ```bash
    npm run dev
    ```
 
 ---
 
-## 🎨 Design Philosophy
-MessMate uses a **Premium Glassmorphic Design** with:
-- **Vibrant Color Palettes**: Soft reds and deep slates for a modern feel.
-- **Micro-Animations**: Smooth transitions using Framer Motion.
-- **Responsive Layout**: Optimized for Mobile, Tablet, and Desktop.
+## 🛡️ Security
+MessMate implements strict **Firestore Security Rules** ensuring that:
+- User profiles are private and only accessible by the owner.
+- Mess listings can only be edited/deleted by the verified owner.
+- Private communications (requests) are restricted to the involved parties.
 
 ---
 
-## 📞 Support
-Developed with ❤️ by **Shreyash Mane**. 
-For queries, reach out via the platform's request system.
+## 🎨 Design Philosophy
+MessMate follows a **Premium Dark/Glassmorphic** aesthetic, utilizing:
+- Subtle gradients and blur effects.
+- Micro-animations for button interactions.
+- High-fidelity 3D renders for a modern look.
+
+---
+
+<div align="center">
+  <p>Made with ❤️ by <b>Shreyash Mane</b></p>
+  <p><i>Transforming the way students eat.</i></p>
+</div>
