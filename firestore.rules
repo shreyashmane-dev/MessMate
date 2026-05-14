@@ -40,6 +40,7 @@ service cloud.firestore {
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if request.auth != null;
+      allow update: if request.auth != null;
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
   }

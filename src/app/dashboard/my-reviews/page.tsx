@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Loader2, MessageSquare, Star, Trash2 } from "lucide-react";
 
@@ -16,12 +16,17 @@ export default function MyReviewsPage() {
       if (!user) return;
       try {
         const q = query(
-          collection(db, "reviews"), 
-          where("userId", "==", user.uid),
-          orderBy("createdAt", "desc")
+          collection(db, "reviews"),
+          where("userId", "==", user.uid)
         );
         const snapshot = await getDocs(q);
-        setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        data.sort((a: any, b: any) => {
+          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        setReviews(data);
       } catch (error) {
         console.error("Error fetching my reviews:", error);
       } finally {

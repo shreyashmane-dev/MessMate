@@ -71,12 +71,25 @@ export default function MessDetailPage({ params }: { params: Promise<{ id: strin
     setIsSaving(true);
     try {
       const userRef = doc(db, "users", user.uid);
-      if (isFavorite) {
-        await updateDoc(userRef, { savedMesses: arrayRemove(id) });
-        setIsFavorite(false);
-      } else {
-        await updateDoc(userRef, { savedMesses: arrayUnion(id) });
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        // Create user doc if it doesn't exist
+        const { setDoc } = await import("firebase/firestore");
+        await setDoc(userRef, { 
+          savedMesses: [id],
+          email: user.email,
+          name: user.displayName || "User"
+        });
         setIsFavorite(true);
+      } else {
+        if (isFavorite) {
+          await updateDoc(userRef, { savedMesses: arrayRemove(id) });
+          setIsFavorite(false);
+        } else {
+          await updateDoc(userRef, { savedMesses: arrayUnion(id) });
+          setIsFavorite(true);
+        }
       }
     } catch (error) {
       console.error("Error updating favorite:", error);
@@ -148,22 +161,28 @@ export default function MessDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {/* Image Gallery (Airbnb Style) */}
-      <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-4 h-[400px] md:h-[500px] mb-12 rounded-3xl overflow-hidden relative">
-        {mess.images?.[0] && (
-          <div className="md:col-span-2 row-span-2 h-full">
-            <img src={optimizeCloudinaryUrl(mess.images[0])} alt="Cover" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+      {/* Image Gallery (Carousel for multiple images) */}
+      <div className="relative mb-12 rounded-3xl overflow-hidden bg-slate-100 h-[400px] md:h-[500px]">
+        {mess.images && mess.images.length > 0 ? (
+          <div className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+            {mess.images.map((img: string, idx: number) => (
+              <div key={idx} className="min-w-full h-full snap-center relative">
+                <img 
+                  src={optimizeCloudinaryUrl(img)} 
+                  alt={`Mess image ${idx + 1}`} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium">
+                  {idx + 1} / {mess.images.length}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-        {mess.images?.slice(1, 5).map((img: string, idx: number) => (
-          <div key={idx} className="hidden md:block h-full">
-            <img src={optimizeCloudinaryUrl(img)} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+            <UtensilsCrossed className="w-12 h-12 mb-2" />
+            <p>No images available</p>
           </div>
-        ))}
-        {mess.images?.length > 5 && (
-          <button className="absolute bottom-6 right-6 bg-white text-slate-900 font-medium px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 hover:scale-105 transition-transform">
-            Show all photos
-          </button>
         )}
       </div>
 

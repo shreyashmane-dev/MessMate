@@ -34,6 +34,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   ] : [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "Favorites", href: "/dashboard/favorites", icon: Store },
+    { name: "My Requests", href: "/dashboard/my-requests", icon: Bell },
+    { name: "My Reviews", href: "/dashboard/my-reviews", icon: MessageSquare },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 

@@ -1,11 +1,12 @@
-import React, { useCallback, useState, useEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { X, UploadCloud, Loader2, Image as ImageIcon } from 'lucide-react';
-import { uploadToCloudinary, optimizeCloudinaryUrl } from '@/lib/cloudinary';
-import { motion, AnimatePresence } from 'framer-motion';
+"use client";
+
+import React, { useCallback, useState, useRef } from "react";
+import { useDropzone } from "react-dropzone";
+import { X, UploadCloud, Loader2, CheckCircle2 } from "lucide-react";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 interface ImageUploaderProps {
-  folder: 'messmate/messes' | 'messmate/reviews' | 'messmate/profiles';
+  folder: "messmate/messes" | "messmate/reviews" | "messmate/profiles";
   maxFiles?: number;
   onUploadComplete: (urls: string[]) => void;
   existingImages?: string[];
@@ -20,175 +21,192 @@ interface UploadingFile {
   url?: string;
 }
 
-export function ImageUploader({ folder, maxFiles = 5, onUploadComplete, existingImages = [] }: ImageUploaderProps) {
-  const [files, setFiles] = useState<UploadingFile[]>([]);
-  const [completedUrls, setCompletedUrls] = useState<string[]>(existingImages);
+export function ImageUploader({
+  folder,
+  maxFiles = 5,
+  onUploadComplete,
+  existingImages = [],
+}: ImageUploaderProps) {
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>(existingImages);
+  const [uploading, setUploading] = useState<UploadingFile[]>([]);
 
-  // Sync with parent state when images change
-  useEffect(() => {
-    onUploadComplete(completedUrls);
-  }, [completedUrls]);
+  // Keep a stable ref to onUploadComplete to avoid stale closures
+  const onUploadCompleteRef = useRef(onUploadComplete);
+  onUploadCompleteRef.current = onUploadComplete;
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    // Filter out if exceeding max files
-    const availableSlots = maxFiles - completedUrls.length - files.length;
-    const filesToProcess = acceptedFiles.slice(0, availableSlots);
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      const available = maxFiles - uploadedUrls.length;
+      if (available <= 0) return;
+      const filesToProcess = acceptedFiles.slice(0, available);
 
-    if (filesToProcess.length === 0) return;
+      const newUploading: UploadingFile[] = filesToProcess.map((file) => ({
+        id: Math.random().toString(36).slice(2),
+        file,
+        preview: URL.createObjectURL(file),
+        progress: 0,
+      }));
 
-    const newFiles: UploadingFile[] = filesToProcess.map((file) => ({
-      id: Math.random().toString(36).substring(7),
-      file,
-      preview: URL.createObjectURL(file),
-      progress: 0,
-    }));
+      setUploading((prev) => [...prev, ...newUploading]);
 
-    setFiles((prev) => [...prev, ...newFiles]);
+      const results = await Promise.all(
+        newUploading.map(async (item) => {
+          try {
+            // Simulate progress ticks
+            const tick = setInterval(() => {
+              setUploading((prev) =>
+                prev.map((f) =>
+                  f.id === item.id && f.progress < 85
+                    ? { ...f, progress: f.progress + 15 }
+                    : f
+                )
+              );
+            }, 300);
 
-    // Upload each file
-    const uploadPromises = newFiles.map(async (uploadFile) => {
-      try {
-        setFiles((prev) => prev.map(f => f.id === uploadFile.id ? { ...f, progress: 30 } : f));
-        
-        // Simulating upload progress while actual upload happens
-        const progressInterval = setInterval(() => {
-          setFiles((prev) => prev.map(f => {
-            if (f.id === uploadFile.id && f.progress < 90) {
-              return { ...f, progress: f.progress + 10 };
-            }
-            return f;
-          }));
-        }, 200);
+            const url = await uploadToCloudinary(item.file, folder);
+            clearInterval(tick);
 
-        const url = await uploadToCloudinary(uploadFile.file, folder);
-        clearInterval(progressInterval);
+            setUploading((prev) =>
+              prev.map((f) => (f.id === item.id ? { ...f, progress: 100, url } : f))
+            );
+            return url;
+          } catch (err: any) {
+            setUploading((prev) =>
+              prev.map((f) =>
+                f.id === item.id ? { ...f, error: err.message || "Upload failed" } : f
+              )
+            );
+            return null;
+          }
+        })
+      );
 
-        setFiles((prev) => prev.map(f => f.id === uploadFile.id ? { ...f, progress: 100, url } : f));
-        return url;
-      } catch (error: any) {
-        setFiles((prev) => prev.map(f => f.id === uploadFile.id ? { ...f, error: error.message } : f));
-        return null;
+      const successUrls = results.filter((u): u is string => !!u);
+
+      if (successUrls.length > 0) {
+        setUploadedUrls((prev) => {
+          const updated = [...prev, ...successUrls];
+          // Call parent callback after state is updated
+          setTimeout(() => onUploadCompleteRef.current(updated), 0);
+          return updated;
+        });
       }
-    });
 
-    const results = await Promise.all(uploadPromises);
-    const successfulUrls = results
-      .filter((url): url is string => url !== null)
-      .map(url => optimizeCloudinaryUrl(url));
-    
-    setCompletedUrls((prev) => {
-      const updated = [...prev, ...successfulUrls];
+      // Clear finished uploads from the queue after a short delay
+      setTimeout(() => {
+        setUploading((prev) => prev.filter((f) => !!f.error));
+      }, 1500);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [folder, maxFiles, uploadedUrls.length]
+  );
+
+  const removeUrl = (url: string) => {
+    setUploadedUrls((prev) => {
+      const updated = prev.filter((u) => u !== url);
+      setTimeout(() => onUploadCompleteRef.current(updated), 0);
       return updated;
     });
+  };
 
-    // Clean up successful uploads from queue
-    setTimeout(() => {
-      setFiles((prev) => prev.filter(f => f.error));
-    }, 2000);
+  const removeUploading = (id: string) => {
+    setUploading((prev) => prev.filter((f) => f.id !== id));
+  };
 
-  }, [maxFiles, completedUrls.length, files.length, folder, onUploadComplete]);
+  const isFull = uploadedUrls.length + uploading.filter((f) => !f.error).length >= maxFiles;
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'image/jpeg': [],
-      'image/png': [],
-      'image/webp': []
-    },
-    maxSize: 5 * 1024 * 1024, // 5MB
-    disabled: completedUrls.length + files.length >= maxFiles
+    accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
+    maxSize: 5 * 1024 * 1024,
+    disabled: isFull,
   });
 
-  const removeCompletedUrl = (urlToRemove: string) => {
-    setCompletedUrls((prev) => {
-      const updated = prev.filter(url => url !== urlToRemove);
-      return updated;
-    });
-  };
-
-  const removeFailedUpload = (id: string) => {
-    setFiles((prev) => prev.filter(f => f.id !== id));
-  };
-
   return (
-    <div className="w-full">
-      <div 
-        {...getRootProps()} 
-        className={`relative overflow-hidden border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer flex flex-col items-center justify-center text-center
-          ${isDragActive ? 'border-indigo-500 bg-red-50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/50 hover:border-slate-600'}
-          ${completedUrls.length + files.length >= maxFiles ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+    <div className="w-full space-y-4">
+      {/* Drop zone */}
+      <div
+        {...getRootProps()}
+        className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all
+          ${isDragActive ? "border-red-500 bg-red-50" : "border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-400"}
+          ${isFull ? "opacity-40 cursor-not-allowed pointer-events-none" : ""}
         `}
       >
         <input {...getInputProps()} />
-        <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
-          <UploadCloud className={`w-8 h-8 ${isDragActive ? 'text-red-500' : 'text-slate-600'}`} />
+        <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-3">
+          <UploadCloud className={`w-6 h-6 ${isDragActive ? "text-red-500" : "text-slate-500"}`} />
         </div>
-        <p className="text-lg font-medium text-slate-900 mb-1">
-          {isDragActive ? 'Drop your images here' : 'Click or drag images to upload'}
+        <p className="text-sm font-semibold text-slate-800">
+          {isDragActive ? "Drop here!" : "Click or drag images to upload"}
         </p>
-        <p className="text-sm text-slate-600">
-          SVG, PNG, JPG or WEBP (max. 5MB). {completedUrls.length + files.length} / {maxFiles} uploaded.
+        <p className="text-xs text-slate-500 mt-1">
+          JPG, PNG, WEBP — max 5MB — {uploadedUrls.length}/{maxFiles} uploaded
         </p>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <AnimatePresence>
-          {completedUrls.map((url, index) => (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              key={`completed-${index}`}
-              className="relative aspect-square rounded-xl overflow-hidden group bg-white border border-slate-200"
+      {/* Uploaded images preview */}
+      {uploadedUrls.length > 0 && (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          {uploadedUrls.map((url, idx) => (
+            <div
+              key={idx}
+              className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group bg-slate-100"
             >
-              <img src={url} alt={`Upload ${index}`} className="w-full h-full object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <img src={url} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <button
                   type="button"
-                  onClick={() => removeCompletedUrl(url)}
-                  className="bg-red-500 hover:bg-red-600 text-slate-900 p-2 rounded-full transform transition-transform hover:scale-110"
+                  onClick={() => removeUrl(url)}
+                  className="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-            </motion.div>
+            </div>
           ))}
+        </div>
+      )}
 
-          {files.map((file) => (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              key={file.id}
-              className="relative aspect-square rounded-xl overflow-hidden bg-white border border-slate-200"
+      {/* In-progress uploads */}
+      {uploading.length > 0 && (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          {uploading.map((f) => (
+            <div
+              key={f.id}
+              className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100"
             >
-              <img src={file.preview} alt="Preview" className="w-full h-full object-cover opacity-50" />
+              <img src={f.preview} alt="Preview" className="w-full h-full object-cover opacity-40" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-                {file.error ? (
+                {f.error ? (
                   <>
-                    <X className="w-8 h-8 text-red-500 mb-2" />
-                    <span className="text-xs text-red-400 text-center line-clamp-2">{file.error}</span>
-                    <button 
+                    <X className="w-6 h-6 text-red-500 mb-1" />
+                    <p className="text-[10px] text-red-400 text-center line-clamp-2">{f.error}</p>
+                    <button
                       type="button"
-                      onClick={() => removeFailedUpload(file.id)}
-                      className="absolute top-1 right-1 bg-slate-100 p-1 rounded-full text-slate-600 hover:text-slate-900"
+                      onClick={() => removeUploading(f.id)}
+                      className="absolute top-1 right-1 bg-white/80 p-1 rounded-full"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-3 h-3 text-slate-600" />
                     </button>
                   </>
+                ) : f.progress === 100 ? (
+                  <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                 ) : (
                   <>
-                    <Loader2 className="w-8 h-8 text-red-600 animate-spin mb-2" />
-                    <div className="w-full bg-slate-100 rounded-full h-1.5">
-                      <div className="bg-indigo-500 h-1.5 rounded-full transition-all duration-300" style={{ width: `${file.progress}%` }}></div>
+                    <Loader2 className="w-7 h-7 text-red-500 animate-spin mb-2" />
+                    <div className="w-full bg-white/50 rounded-full h-1">
+                      <div
+                        className="bg-red-500 h-1 rounded-full transition-all duration-300"
+                        style={{ width: `${f.progress}%` }}
+                      />
                     </div>
                   </>
                 )}
               </div>
-            </motion.div>
+            </div>
           ))}
-        </AnimatePresence>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
